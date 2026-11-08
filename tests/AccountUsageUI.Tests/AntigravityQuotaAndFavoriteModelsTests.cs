@@ -288,4 +288,49 @@ public sealed class AntigravityQuotaAndFavoriteModelsTests
         var model = AntigravityQuotaResponseParser.TryParseLastSelectedModelFromPbtxt(pbtxt);
         Assert.AreEqual("MODEL_PLACEHOLDER_M47", model);
     }
+
+    [TestMethod]
+    public void SelectRecentlyUsedModel_HandlesDuplicateKeysInPreviousSnapshotWithoutThrowing()
+    {
+        var profileId = ProfileId.New();
+        var now = DateTimeOffset.UtcNow;
+
+        // Duplicate entries like Claude Opus 5.5 without window
+        var previous = new ProfileQuotaSnapshot(
+            profileId,
+            ProfileQuotaStatus.Available,
+            [
+                new ModelQuotaWindow("claude-opus-high", "Claude Opus 5.5 (High)", 1.0, now.AddDays(5), null, null),
+                new ModelQuotaWindow("claude-opus-thinking", "Claude Opus 5.5 (Thinking)", 1.0, now.AddDays(5), null, null),
+                new ModelQuotaWindow("gemini-flash-lite-high", "Gemini 3.5 Flash Lite (High)", 1.0, now.AddDays(5), null, null),
+                new ModelQuotaWindow("gemini-flash-lite-low", "Gemini 3.5 Flash Lite (Low)", 1.0, now.AddDays(5), null, null)
+            ],
+            "user@example.com",
+            "Pro",
+            null,
+            null,
+            now);
+
+        var current = new ProfileQuotaSnapshot(
+            profileId,
+            ProfileQuotaStatus.Available,
+            [
+                new ModelQuotaWindow("claude-opus-high", "Claude Opus 5.5 (High)", 0.75, now.AddDays(5), null, null),
+                new ModelQuotaWindow("claude-opus-thinking", "Claude Opus 5.5 (Thinking)", 0.80, now.AddDays(5), null, null),
+                new ModelQuotaWindow("gemini-flash-lite-high", "Gemini 3.5 Flash Lite (High)", 1.0, now.AddDays(5), null, null)
+            ],
+            "user@example.com",
+            "Pro",
+            null,
+            null,
+            now);
+
+        var selected = FavoriteModelsPolicy.SelectRecentlyUsedModel(
+            current,
+            previousSnapshot: previous,
+            FavoriteModelsPolicy.DefaultFavoriteModels);
+
+        Assert.IsNotNull(selected);
+        Assert.AreEqual("Claude Opus 5.5", selected.DisplayName);
+    }
 }

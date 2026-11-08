@@ -17,9 +17,32 @@ public partial class App : Application
     private ProfileUsageMonitor? _usageMonitor;
     private MainWindow? _mainWindow;
 
+    private static void LogCrash(string category, object? exception)
+    {
+        try
+        {
+            var logDir = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AccountUsageUI");
+            System.IO.Directory.CreateDirectory(logDir);
+            System.IO.File.AppendAllText(System.IO.Path.Combine(logDir, "crash.log"), $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {category}: {exception}\n");
+        }
+        catch
+        {
+        }
+    }
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        AppDomain.CurrentDomain.UnhandledException += (s, args) =>
+        {
+            LogCrash("AppDomain Unhandled", args.ExceptionObject);
+        };
+
+        DispatcherUnhandledException += (s, args) =>
+        {
+            LogCrash("Dispatcher Unhandled", args.Exception);
+        };
 
         _singleInstanceCoordinator = new SingleInstanceCoordinator();
         if (!_singleInstanceCoordinator.IsPrimaryInstance)
@@ -95,8 +118,6 @@ public partial class App : Application
             getRuntimeState,
             settingsStore);
 
-        await viewModel.InitializeAsync(CancellationToken.None).ConfigureAwait(true);
-
         var placementStore = new PopupPlacementStore();
         _mainWindow = new MainWindow(
             viewModel,
@@ -113,6 +134,16 @@ public partial class App : Application
             () => Dispatcher.BeginInvoke(() => _mainWindow?.RestoreFromTray()));
 
         _mainWindow.Show();
+        _mainWindow.Activate();
+
+        try
+        {
+            await viewModel.InitializeAsync(CancellationToken.None).ConfigureAwait(true);
+        }
+        catch (Exception ex)
+        {
+            LogCrash("viewModel.InitializeAsync", ex);
+        }
     }
 
     public void RequestExit()

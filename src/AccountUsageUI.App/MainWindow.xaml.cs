@@ -100,20 +100,50 @@ public partial class MainWindow : Window
 
     private void OnUsageSnapshotChanged(object? sender, ProfileQuotaSnapshot snapshot)
     {
-        Dispatcher.BeginInvoke(() => _viewModel.ApplyUsageSnapshot(snapshot));
+        Dispatcher.BeginInvoke(() =>
+        {
+            try
+            {
+                _viewModel.ApplyUsageSnapshot(snapshot);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to apply usage snapshot: {ex}");
+            }
+        });
     }
 
     private void OnRuntimeStateChanged(object? sender, ProfileRuntimeState state)
     {
         Dispatcher.BeginInvoke(
-            async () => await _viewModel.ApplyMonitoredRuntimeStateAsync(
-                state,
-                CancellationToken.None).ConfigureAwait(true));
+            async () =>
+            {
+                try
+                {
+                    await _viewModel.ApplyMonitoredRuntimeStateAsync(
+                        state,
+                        CancellationToken.None).ConfigureAwait(true);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Failed to apply runtime state: {ex}");
+                }
+            });
     }
 
     private void OnRefreshingChanged(object? sender, bool isRefreshing)
     {
-        Dispatcher.BeginInvoke(() => _viewModel.SetUsageRefreshing(isRefreshing));
+        Dispatcher.BeginInvoke(() =>
+        {
+            try
+            {
+                _viewModel.SetUsageRefreshing(isRefreshing);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to apply refreshing state: {ex}");
+            }
+        });
     }
 
     private async void OnRefreshClicked(object sender, RoutedEventArgs e)

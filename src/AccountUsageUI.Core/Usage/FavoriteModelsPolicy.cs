@@ -162,11 +162,15 @@ public static class FavoriteModelsPolicy
         // 1. 이전 스냅샷 대비 남은 비율이 실제로 줄어든 항목 탐지
         if (previousSnapshot is not null && previousSnapshot.ModelList.Count > 0)
         {
-            var prevByKey = previousSnapshot.ModelList
-                .ToDictionary(
-                    GetComparisonKey,
-                    m => m.RemainingFraction,
-                    StringComparer.OrdinalIgnoreCase);
+            var prevByKey = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            foreach (var model in previousSnapshot.ModelList)
+            {
+                var key = GetComparisonKey(model);
+                if (!prevByKey.TryGetValue(key, out var existingFraction) || model.RemainingFraction < existingFraction)
+                {
+                    prevByKey[key] = model.RemainingFraction;
+                }
+            }
 
             ModelQuotaWindow? decremented = null;
             var maxDrop = 0.0001;
@@ -233,8 +237,8 @@ public static class FavoriteModelsPolicy
             return FormatForPopupDisplay(usedAny);
         }
 
-        var first = favorites.FirstOrDefault() ?? candidates[0];
-        return FormatForPopupDisplay(first);
+        var first = favorites.FirstOrDefault() ?? candidates.FirstOrDefault() ?? allModels.FirstOrDefault();
+        return first is not null ? FormatForPopupDisplay(first) : null;
     }
 
     public static IReadOnlyList<ModelQuotaWindow> CollapseByFamily(
@@ -297,6 +301,11 @@ public static class FavoriteModelsPolicy
         if (!string.IsNullOrWhiteSpace(model.Window))
         {
             return $"{model.FamilyGroup ?? model.DisplayName}::{model.ModelId}::{model.Window}";
+        }
+
+        if (!string.IsNullOrWhiteSpace(model.ModelId))
+        {
+            return $"{model.FamilyGroup ?? NormalizeFamilyName(model.DisplayName)}::{model.ModelId}";
         }
 
         return NormalizeFamilyName(model.DisplayName);
