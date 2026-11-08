@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AssemblyName>AccountUsageUI</AssemblyName>
+    <RootNamespace>AccountUsageUI.App</RootNamespace>
+    <ApplicationIcon>Assets\AccountUsageUI.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AccountUsageUI.Core\AccountUsageUI.Core.csproj" />
+    <ProjectReference Include="..\AccountUsageUI.Infrastructure\AccountUsageUI.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\AccountUsageUI.ico" />
+    <Resource Include="Resources\Fonts\**\*.ttf" />
+  </ItemGroup>
+
+</Project>

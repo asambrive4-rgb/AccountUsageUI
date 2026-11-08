@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AccountUsageUI.App/AccountUsageUI.App.csproj" />
+    <Project Path="src/AccountUsageUI.Core/AccountUsageUI.Core.csproj" />
+    <Project Path="src/AccountUsageUI.Infrastructure/AccountUsageUI.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/AccountUsageUI.Tests/AccountUsageUI.Tests.csproj" />
+  </Folder>
+</Solution>
